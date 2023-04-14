@@ -284,6 +284,7 @@ where
 	{
 		let inner = || {
 			let _import_lock = self.backend.get_import_lock().write();
+			log::debug!("Was able to acquire import lock");
 
 			let mut op = ClientImportOperation {
 				op: self.backend.begin_operation()?,
