@@ -350,6 +350,7 @@ impl<B: BlockT> BlockImportWorker<B> {
 	) {
 		let started = std::time::Instant::now();
 
+		log::debug!(target: LOG_TARGET, ?hash, ?number, "Importing justification");
 		let success = match self.justification_import.as_mut() {
 			Some(justification_import) => justification_import
 				.import_justification(hash, number, justification)

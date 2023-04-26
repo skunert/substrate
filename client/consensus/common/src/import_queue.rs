@@ -351,6 +351,7 @@ pub(crate) async fn import_single_block_metered<
 	}
 
 	let import_block = import_block.clear_storage_changes_and_mutate();
+	trace!(target: LOG_TARGET, number, hash, "Actual importing after verification");
 	let imported = import_handle.import_block(import_block).await;
 	if let Some(metrics) = metrics.as_ref() {
 		metrics.report_verification_and_import(started.elapsed());
