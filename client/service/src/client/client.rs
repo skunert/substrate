@@ -953,6 +953,8 @@ where
 
 		let enacted = route_from_finalized.enacted();
 		assert!(enacted.len() > 0);
+
+		info!("skunert: Route from finalized contains {:?} elements", enacted.len());
 		for finalize_new in &enacted[..enacted.len() - 1] {
 			operation.op.mark_finalized(finalize_new.hash, None)?;
 		}
@@ -983,6 +985,7 @@ where
 				.header(block)?
 				.expect("Block to finalize expected to be onchain; qed");
 
+			info!("skunert: Stale heads contains {} elements.", stale_heads.len());
 			operation.notify_finalized = Some(FinalizeSummary { header, finalized, stale_heads });
 		}
 
