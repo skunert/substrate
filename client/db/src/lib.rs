@@ -1617,11 +1617,17 @@ impl<Block: BlockT> Backend<Block> {
 				// TODO: ensure best chain contains this block.
 				self.ensure_sequential_finalization(header, Some(last_finalized_hash))?;
 				let mut current_transaction_justifications = HashMap::new();
+
+				let state_available = if operation.commit_state {
+					sc_client_api::Backend::have_state_at(self, hash, *header.number())
+				} else {
+					false
+				};
 				self.note_finalized(
 					&mut transaction,
 					header,
 					hash,
-					operation.commit_state,
+					state_available,
 					&mut current_transaction_justifications,
 				)?;
 			} else {
@@ -1755,13 +1761,13 @@ impl<Block: BlockT> Backend<Block> {
 		transaction: &mut Transaction<DbHash>,
 		f_header: &Block::Header,
 		f_hash: Block::Hash,
-		with_state: bool,
+		state_available: bool,
 		current_transaction_justifications: &mut HashMap<Block::Hash, Justification>,
 	) -> ClientResult<()> {
 		let f_num = *f_header.number();
 
 		let lookup_key = utils::number_and_hash_to_lookup_key(f_num, f_hash)?;
-		if with_state {
+		if state_available {
 			transaction.set_from_vec(columns::META, meta_keys::FINALIZED_STATE, lookup_key.clone());
 		}
 		transaction.set_from_vec(columns::META, meta_keys::FINALIZED_BLOCK, lookup_key);
@@ -1772,7 +1778,7 @@ impl<Block: BlockT> Backend<Block> {
 			LastCanonicalized::NotCanonicalizing => false,
 		};
 
-		if requires_canonicalization && sc_client_api::Backend::have_state_at(self, f_hash, f_num) {
+		if requires_canonicalization && state_available {
 			let commit = self.storage.state_db.canonicalize_block(&f_hash).map_err(
 				sp_blockchain::Error::from_state_db::<
 					sc_state_db::Error<sp_database::error::DatabaseError>,
