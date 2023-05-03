@@ -1618,11 +1618,8 @@ impl<Block: BlockT> Backend<Block> {
 				self.ensure_sequential_finalization(header, Some(last_finalized_hash))?;
 				let mut current_transaction_justifications = HashMap::new();
 
-				let state_available = if operation.commit_state {
-					sc_client_api::Backend::have_state_at(self, hash, *header.number())
-				} else {
-					false
-				};
+				let state_available = operation.commit_state &&
+					sc_client_api::Backend::have_state_at(self, hash, *header.number());
 				self.note_finalized(
 					&mut transaction,
 					header,
