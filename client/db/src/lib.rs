@@ -1347,7 +1347,6 @@ impl<Block: BlockT> Backend<Block> {
 		justification: Option<Justification>,
 		current_transaction_justifications: &mut HashMap<Block::Hash, Justification>,
 	) -> ClientResult<MetaUpdate<Block>> {
-		// TODO: ensure best chain contains this block.
 		let number = *header.number();
 		self.ensure_sequential_finalization(header, last_finalized)?;
 		let with_state = sc_client_api::Backend::have_state_at(self, hash, number);
