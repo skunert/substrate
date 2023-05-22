@@ -20,7 +20,7 @@ use futures::{
 	task::{Context, Poll},
 };
 use futures_timer::Delay;
-use log::{debug, trace};
+use log::{debug, info, trace};
 use prometheus_endpoint::Registry;
 use sc_utils::mpsc::{tracing_unbounded, TracingUnboundedReceiver, TracingUnboundedSender};
 use sp_consensus::BlockOrigin;
@@ -129,7 +129,15 @@ impl<B: BlockT> ImportQueueService<B> for BasicQueueHandle<B> {
 			return
 		}
 
-		trace!(target: LOG_TARGET, "Scheduling {} blocks for import", blocks.len());
+		let blocks_range = match (
+			blocks.first().and_then(|b| b.header.as_ref().map(|h| h.number())),
+			blocks.last().and_then(|b| b.header.as_ref().map(|h| h.number())),
+		) {
+			(Some(first), Some(last)) if first != last => format!(" ({}..{})", first, last),
+			(Some(first), Some(_)) => format!(" ({})", first),
+			_ => Default::default(),
+		};
+		log::info!(target: LOG_TARGET, "Scheduling {} blocks for import {}", blocks.len(), blocks_range);
 		let res = self
 			.block_import_sender
 			.unbounded_send(worker_messages::ImportBlocks(origin, blocks));
@@ -449,14 +457,21 @@ async fn import_many_blocks<B: BlockT, V: Verifier<B>, Transaction: Send + 'stat
 		}
 
 		if import_result.is_ok() {
-			trace!(
-				target: LOG_TARGET,
+			info!(
+				target: "skunert",
 				"Block imported successfully {:?} ({})",
 				block_number,
 				block_hash,
 			);
 			imported += 1;
 		} else {
+			info!(
+				target: "skunert",
+				"Block imported with error {:?} ({}) {:?}",
+				block_number,
+				block_hash,
+				import_result
+			);
 			has_error = true;
 		}
 

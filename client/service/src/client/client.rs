@@ -55,6 +55,7 @@ use sp_blockchain::{
 	HeaderBackend as ChainHeaderBackend, HeaderMetadata,
 };
 use sp_consensus::{BlockOrigin, BlockStatus, Error as ConsensusError};
+use std::time::Instant;
 
 use sc_utils::mpsc::{tracing_unbounded, TracingUnboundedSender};
 use sp_core::{
@@ -1780,7 +1781,11 @@ where
 				PrepareStorageChangesResult::Import(storage_changes) => storage_changes,
 			};
 
+		let number = import_block.header.number().clone();
+		let now = Instant::now();
+		info!(target: "skunert", "Starting import of block {}", number);
 		self.lock_import_and_run(|operation| {
+			info!(target: "skunert", "Able to acquire import lock, applying block {}. Elapsed: {:?}", number, now.elapsed());
 			self.apply_block(operation, import_block, storage_changes)
 		})
 		.map_err(|e| {
