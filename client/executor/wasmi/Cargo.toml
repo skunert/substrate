@@ -14,7 +14,7 @@ readme = "README.md"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-log = "0.4.17"
+log = "0.4.18"
 wasmi = { version = "0.13.2", features = [ "virtual_memory" ] }
 sc-allocator = { version = "4.1.0-dev", path = "../../allocator" }
 sc-executor-common = { version = "0.10.0-dev", path = "../common" }
