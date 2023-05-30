@@ -458,7 +458,7 @@ async fn import_many_blocks<B: BlockT, V: Verifier<B>, Transaction: Send + 'stat
 
 		if import_result.is_ok() {
 			info!(
-				target: "skunert",
+				target: LOG_TARGET,
 				"Block imported successfully {:?} ({})",
 				block_number,
 				block_hash,

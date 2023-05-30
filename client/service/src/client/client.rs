@@ -879,11 +879,13 @@ where
 				let runtime_api = self.runtime_api();
 				let execution_context = import_block.origin.into();
 
+				let now = Instant::now();
 				runtime_api.execute_block_with_context(
 					*parent_hash,
 					execution_context,
 					Block::new(import_block.header.clone(), body.clone()),
 				)?;
+				log::info!(target: "skunert", "Finished calculating storage changes in {:?}", now.elapsed());
 
 				let state = self.backend.state_at(*parent_hash)?;
 				let gen_storage_changes = runtime_api
