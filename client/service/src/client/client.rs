@@ -291,6 +291,10 @@ where
 				notify_imported: None,
 				notify_finalized: None,
 			};
+			info!(
+				target: "skunert",
+				"Received op",
+			);
 
 			let r = f(&mut op)?;
 
@@ -328,7 +332,12 @@ where
 				}
 			}
 
+			let time = Instant::now();
 			self.backend.commit_operation(op)?;
+			info!(
+				target: "skunert",
+				"Committing finished {:?}", time.elapsed()
+			);
 
 			// We need to pin the block in the backend once
 			// for each notification. Once all notifications are
@@ -510,6 +519,7 @@ where
 		<Self as ProvideRuntimeApi<Block>>::Api:
 			CoreApi<Block> + ApiExt<Block, StateBackend = B::State>,
 	{
+		info!(target: "skunert", "apply_block");
 		let BlockImportParams {
 			origin,
 			header,
@@ -604,6 +614,11 @@ where
 		<Self as ProvideRuntimeApi<Block>>::Api:
 			CoreApi<Block> + ApiExt<Block, StateBackend = B::State>,
 	{
+		info!(
+			target: "skunert",
+			"execute_and_import_block {:?}",
+			hash,
+		);
 		let parent_hash = *import_headers.post().parent_hash();
 		let status = self.backend.blockchain().status(hash)?;
 		let parent_exists =
@@ -710,6 +725,11 @@ where
 			},
 			None => None,
 		};
+		info!(
+			target: "skunert",
+			"storage_changes finished {:?}",
+			hash,
+		);
 
 		// Ensure parent chain is finalized to maintain invariant that finality is called
 		// sequentially.
@@ -879,13 +899,11 @@ where
 				let runtime_api = self.runtime_api();
 				let execution_context = import_block.origin.into();
 
-				let now = Instant::now();
 				runtime_api.execute_block_with_context(
 					*parent_hash,
 					execution_context,
 					Block::new(import_block.header.clone(), body.clone()),
 				)?;
-				log::info!(target: "skunert", "Finished calculating storage changes in {:?}", now.elapsed());
 
 				let state = self.backend.state_at(*parent_hash)?;
 				let gen_storage_changes = runtime_api
@@ -1785,7 +1803,6 @@ where
 
 		let number = import_block.header.number().clone();
 		let now = Instant::now();
-		info!(target: "skunert", "Starting import of block {}", number);
 		self.lock_import_and_run(|operation| {
 			info!(target: "skunert", "Able to acquire import lock, applying block {}. Elapsed: {:?}", number, now.elapsed());
 			self.apply_block(operation, import_block, storage_changes)
