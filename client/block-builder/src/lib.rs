@@ -29,7 +29,8 @@
 use codec::Encode;
 
 use sp_api::{
-	ApiExt, ApiRef, Core, ProvideRuntimeApi, StorageChanges, StorageProof, TransactionOutcome,
+	ApiExt, ApiRef, Core, Extension, ProvideRuntimeApi, StorageChanges, StorageProof,
+	TransactionOutcome,
 };
 use sp_blockchain::{ApplyExtrinsicFailed, Error};
 use sp_core::traits::CallContext;
@@ -121,6 +122,7 @@ where
 		parent: Block::Hash,
 		inherent_digests: Digest,
 		record_proof: R,
+		execution_extension: Option<Box<dyn Extension>>,
 	) -> sp_blockchain::Result<BlockBuilder<Block, RA, B>>;
 
 	/// Create a new block, built on the head of the chain.
@@ -154,13 +156,16 @@ where
 	/// While proof recording is enabled, all accessed trie nodes are saved.
 	/// These recorded trie nodes can be used by a third party to prove the
 	/// output of this block builder without having access to the full storage.
-	pub fn new(
+	/// The given externality extension `extension` will be registered for the
+	/// runtime instance used to build the block.
+	pub fn new_with_extension(
 		api: &'a A,
 		parent_hash: Block::Hash,
 		parent_number: NumberFor<Block>,
 		record_proof: RecordProof,
 		inherent_digests: Digest,
 		backend: &'a B,
+		extension: Option<Box<dyn Extension>>,
 	) -> Result<Self, Error> {
 		let header = <<Block as BlockT>::Header as HeaderT>::new(
 			parent_number + One::one(),
@@ -173,6 +178,7 @@ where
 		let estimated_header_size = header.encoded_size();
 
 		let mut api = api.runtime_api();
+		extension.map(|e| api.register_extension(e));
 
 		if record_proof.yes() {
 			api.record_proof();
@@ -194,6 +200,30 @@ where
 			backend,
 			estimated_header_size,
 		})
+	}
+
+	/// Create a new instance of builder based on the given `parent_hash` and `parent_number`.
+	///
+	/// While proof recording is enabled, all accessed trie nodes are saved.
+	/// These recorded trie nodes can be used by a third party to prove the
+	/// output of this block builder without having access to the full storage.
+	pub fn new(
+		api: &'a A,
+		parent_hash: Block::Hash,
+		parent_number: NumberFor<Block>,
+		record_proof: RecordProof,
+		inherent_digests: Digest,
+		backend: &'a B,
+	) -> Result<Self, Error> {
+		Self::new_with_extension(
+			api,
+			parent_hash,
+			parent_number,
+			record_proof,
+			inherent_digests,
+			backend,
+			None,
+		)
 	}
 
 	/// Push onto the block's list of extrinsics.

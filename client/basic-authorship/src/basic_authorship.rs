@@ -29,7 +29,7 @@ use futures::{
 };
 use log::{debug, error, info, trace, warn};
 use sc_block_builder::{BlockBuilderApi, BlockBuilderProvider};
-use sc_client_api::backend;
+use sc_client_api::{backend, execution_extensions::ExtensionsFactory};
 use sc_telemetry::{telemetry, TelemetryHandle, CONSENSUS_INFO};
 use sc_transaction_pool_api::{InPoolTransaction, TransactionPool};
 use sp_api::{ApiExt, ProvideRuntimeApi};
@@ -212,6 +212,7 @@ where
 			telemetry: self.telemetry.clone(),
 			_phantom: PhantomData,
 			include_proof_in_block_size_estimation: self.include_proof_in_block_size_estimation,
+			execution_extension: None,
 		};
 
 		proposer
@@ -254,6 +255,7 @@ pub struct Proposer<B, Block: BlockT, C, A: TransactionPool, PR> {
 	default_block_size_limit: usize,
 	include_proof_in_block_size_estimation: bool,
 	soft_deadline_percent: Percent,
+	execution_extension: Option<Box<dyn ExtensionsFactory<Block>>>,
 	telemetry: Option<TelemetryHandle>,
 	_phantom: PhantomData<(B, PR)>,
 }
@@ -346,7 +348,8 @@ where
 	{
 		let propose_with_timer = time::Instant::now();
 		let mut block_builder =
-			self.client.new_block_at(self.parent_hash, inherent_digests, PR::ENABLED)?;
+			self.client
+				.new_block_at(self.parent_hash, inherent_digests, PR::ENABLED, None)?;
 
 		self.apply_inherents(&mut block_builder, inherent_data)?;
 

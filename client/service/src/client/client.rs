@@ -55,6 +55,7 @@ use sp_blockchain::{
 	HeaderBackend as ChainHeaderBackend, HeaderMetadata, Info as BlockchainInfo,
 };
 use sp_consensus::{BlockOrigin, BlockStatus, Error as ConsensusError};
+use sp_externalities::Extension;
 
 use sc_utils::mpsc::{tracing_unbounded, TracingUnboundedSender};
 use sp_core::{
@@ -1426,14 +1427,16 @@ where
 		parent: Block::Hash,
 		inherent_digests: Digest,
 		record_proof: R,
+		extension: Option<Box<dyn Extension>>,
 	) -> sp_blockchain::Result<sc_block_builder::BlockBuilder<Block, Self, B>> {
-		sc_block_builder::BlockBuilder::new(
+		sc_block_builder::BlockBuilder::new_with_extension(
 			self,
 			parent,
 			self.expect_block_number_from_id(&BlockId::Hash(parent))?,
 			record_proof.into(),
 			inherent_digests,
 			&self.backend,
+			extension,
 		)
 	}
 
