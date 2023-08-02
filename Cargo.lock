@@ -10782,6 +10782,7 @@ dependencies = [
  "parity-scale-codec",
  "sp-std",
  "sp-storage",
+ "tracing",
 ]
 
 [[package]]
@@ -11000,6 +11001,7 @@ name = "sp-runtime-interface-proc-macro"
 version = "11.0.0"
 dependencies = [
  "Inflector",
+ "expander",
  "proc-macro-crate",
  "proc-macro2",
  "quote",

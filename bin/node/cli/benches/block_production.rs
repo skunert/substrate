@@ -197,8 +197,9 @@ fn block_production(c: &mut Criterion) {
 		b.iter_batched(
 			|| extrinsics.clone(),
 			|extrinsics| {
-				let mut block_builder =
-					client.new_block_at(best_hash, Default::default(), RecordProof::No).unwrap();
+				let mut block_builder = client
+					.new_block_at(best_hash, Default::default(), RecordProof::No, None)
+					.unwrap();
 				for extrinsic in extrinsics {
 					block_builder.push(extrinsic).unwrap();
 				}
@@ -212,8 +213,9 @@ fn block_production(c: &mut Criterion) {
 		b.iter_batched(
 			|| extrinsics.clone(),
 			|extrinsics| {
-				let mut block_builder =
-					client.new_block_at(best_hash, Default::default(), RecordProof::Yes).unwrap();
+				let mut block_builder = client
+					.new_block_at(best_hash, Default::default(), RecordProof::Yes, None)
+					.unwrap();
 				for extrinsic in extrinsics {
 					block_builder.push(extrinsic).unwrap();
 				}

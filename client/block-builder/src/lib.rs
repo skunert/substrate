@@ -122,7 +122,7 @@ where
 		parent: Block::Hash,
 		inherent_digests: Digest,
 		record_proof: R,
-		execution_extension: Option<Box<dyn Extension>>,
+		extension: Option<Box<dyn Extension + Sync + Send>>,
 	) -> sp_blockchain::Result<BlockBuilder<Block, RA, B>>;
 
 	/// Create a new block, built on the head of the chain.
@@ -165,7 +165,7 @@ where
 		record_proof: RecordProof,
 		inherent_digests: Digest,
 		backend: &'a B,
-		extension: Option<Box<dyn Extension>>,
+		extension: Option<Box<dyn Extension + Sync + Send>>,
 	) -> Result<Self, Error> {
 		let header = <<Block as BlockT>::Header as HeaderT>::new(
 			parent_number + One::one(),
@@ -178,7 +178,10 @@ where
 		let estimated_header_size = header.encoded_size();
 
 		let mut api = api.runtime_api();
-		extension.map(|e| api.register_extension(e));
+
+		if let Some(extension) = extension {
+			api.register_extension(extension);
+		}
 
 		if record_proof.yes() {
 			api.record_proof();
