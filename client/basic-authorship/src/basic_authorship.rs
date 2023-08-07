@@ -169,7 +169,8 @@ impl<A, B, C> ProposerFactory<A, B, C, EnableProofRecording> {
 	}
 }
 
-type ExtensionProducer = Box<dyn Fn() -> Box<dyn Extension + Send + Sync> + Send + Sync>;
+type ExtensionProducer =
+	Box<dyn Fn() -> (core::any::TypeId, Box<dyn Extension + Send + Sync>) + Send + Sync>;
 
 impl<A, B, C, PR> ProposerFactory<A, B, C, PR> {
 	/// Set the default block size limit in bytes.
@@ -280,7 +281,7 @@ pub struct Proposer<B, Block: BlockT, C, A: TransactionPool, PR> {
 	default_block_size_limit: usize,
 	include_proof_in_block_size_estimation: bool,
 	soft_deadline_percent: Percent,
-	extension: Option<Box<dyn Extension + Send + Sync>>,
+	extension: Option<(core::any::TypeId, Box<dyn Extension + Send + Sync>)>,
 	telemetry: Option<TelemetryHandle>,
 	_phantom: PhantomData<(B, PR)>,
 }

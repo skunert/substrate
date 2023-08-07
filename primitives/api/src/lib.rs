@@ -72,6 +72,7 @@ extern crate self as sp_api;
 
 #[doc(hidden)]
 pub use codec::{self, Decode, DecodeLimit, Encode};
+use core::any::TypeId;
 #[doc(hidden)]
 #[cfg(feature = "std")]
 pub use hash_db::Hasher;
@@ -595,6 +596,9 @@ pub trait ApiExt<Block: BlockT> {
 
 	/// Register an [`Extension`] that will be accessible while executing a runtime api call.
 	fn register_extension<E: Extension>(&mut self, extension: E);
+
+	/// Register an [`Extension`] that will be accessible while executing a runtime api call.
+	fn register_extension_with_type_id(&mut self, type_id: TypeId, extension: Box<dyn Extension>);
 }
 
 /// Parameters for [`CallApiAt::call_api_at`].

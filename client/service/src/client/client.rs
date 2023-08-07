@@ -81,6 +81,7 @@ use sp_state_machine::{
 };
 use sp_trie::{CompactProof, StorageProof};
 use std::{
+	any::TypeId,
 	collections::{HashMap, HashSet},
 	marker::PhantomData,
 	path::PathBuf,
@@ -1427,7 +1428,7 @@ where
 		parent: Block::Hash,
 		inherent_digests: Digest,
 		record_proof: R,
-		extension: Option<Box<dyn Extension + Sync + Send>>,
+		extension: Option<(TypeId, Box<dyn Extension + Sync + Send>)>,
 	) -> sp_blockchain::Result<sc_block_builder::BlockBuilder<Block, Self, B>> {
 		sc_block_builder::BlockBuilder::new_with_extension(
 			self,

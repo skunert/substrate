@@ -26,6 +26,8 @@
 
 #![warn(missing_docs)]
 
+use std::any::TypeId;
+
 use codec::Encode;
 
 use sp_api::{
@@ -122,7 +124,7 @@ where
 		parent: Block::Hash,
 		inherent_digests: Digest,
 		record_proof: R,
-		extension: Option<Box<dyn Extension + Sync + Send>>,
+		extension: Option<(core::any::TypeId, Box<dyn Extension + Sync + Send>)>,
 	) -> sp_blockchain::Result<BlockBuilder<Block, RA, B>>;
 
 	/// Create a new block, built on the head of the chain.
@@ -165,7 +167,7 @@ where
 		record_proof: RecordProof,
 		inherent_digests: Digest,
 		backend: &'a B,
-		extension: Option<Box<dyn Extension + Sync + Send>>,
+		extension: Option<(TypeId, Box<dyn Extension + Sync + Send>)>,
 	) -> Result<Self, Error> {
 		let header = <<Block as BlockT>::Header as HeaderT>::new(
 			parent_number + One::one(),
@@ -180,7 +182,10 @@ where
 		let mut api = api.runtime_api();
 
 		if let Some(extension) = extension {
-			api.register_extension(extension);
+			log::info!(target:"skunert", "Registering extension in Block-builder");
+			api.register_extension_with_type_id(extension.0, extension.1);
+		} else {
+			log::info!(target:"skunert", "not registering extension in Block-builder");
 		}
 
 		if record_proof.yes() {
