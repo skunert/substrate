@@ -457,6 +457,15 @@ pub use sp_api_proc_macro::mock_impl_runtime_apis;
 #[cfg(feature = "std")]
 pub type ProofRecorder<B> = sp_trie::recorder::Recorder<HashingFor<B>>;
 
+#[cfg(feature = "std")]
+pub type ExtensionProducer = sp_std::sync::Arc<
+	dyn Fn(
+			Box<dyn sp_trie::ProofSizeEstimationProvider + Send + Sync>,
+		) -> (core::any::TypeId, Box<dyn Extension + Send + Sync>)
+		+ Send
+		+ Sync,
+>;
+
 /// A type that is used as cache for the storage transactions.
 #[cfg(feature = "std")]
 pub type StorageTransactionCache<Block, Backend> = sp_state_machine::StorageTransactionCache<

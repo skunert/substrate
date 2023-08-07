@@ -32,7 +32,7 @@ use sc_block_builder::{BlockBuilderApi, BlockBuilderProvider};
 use sc_client_api::backend;
 use sc_telemetry::{telemetry, TelemetryHandle, CONSENSUS_INFO};
 use sc_transaction_pool_api::{InPoolTransaction, TransactionPool};
-use sp_api::{ApiExt, Extension, ProvideRuntimeApi};
+use sp_api::{ApiExt, ExtensionProducer, ProvideRuntimeApi};
 use sp_blockchain::{ApplyExtrinsicFailed::Validity, Error::ApplyExtrinsicFailed, HeaderBackend};
 use sp_consensus::{DisableProofRecording, EnableProofRecording, ProofRecording, Proposal};
 use sp_core::traits::SpawnNamed;
@@ -169,9 +169,6 @@ impl<A, B, C> ProposerFactory<A, B, C, EnableProofRecording> {
 	}
 }
 
-type ExtensionProducer =
-	Box<dyn Fn() -> (core::any::TypeId, Box<dyn Extension + Send + Sync>) + Send + Sync>;
-
 impl<A, B, C, PR> ProposerFactory<A, B, C, PR> {
 	/// Set the default block size limit in bytes.
 	///
@@ -224,7 +221,6 @@ where
 
 		info!("🙌 Starting consensus session on top of parent {:?}", parent_hash);
 
-		let extension = self.extension.as_ref().map(|extension_generator| extension_generator());
 		let proposer = Proposer::<_, _, _, _, PR> {
 			spawn_handle: self.spawn_handle.clone(),
 			client: self.client.clone(),
@@ -238,7 +234,7 @@ where
 			telemetry: self.telemetry.clone(),
 			_phantom: PhantomData,
 			include_proof_in_block_size_estimation: self.include_proof_in_block_size_estimation,
-			extension,
+			extension: self.extension.clone(),
 		};
 
 		proposer
@@ -281,7 +277,7 @@ pub struct Proposer<B, Block: BlockT, C, A: TransactionPool, PR> {
 	default_block_size_limit: usize,
 	include_proof_in_block_size_estimation: bool,
 	soft_deadline_percent: Percent,
-	extension: Option<(core::any::TypeId, Box<dyn Extension + Send + Sync>)>,
+	extension: Option<ExtensionProducer>,
 	telemetry: Option<TelemetryHandle>,
 	_phantom: PhantomData<(B, PR)>,
 }

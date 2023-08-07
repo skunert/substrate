@@ -8544,6 +8544,7 @@ dependencies = [
  "sp-core",
  "sp-inherents",
  "sp-runtime",
+ "sp-trie",
  "substrate-prometheus-endpoint",
  "substrate-test-runtime-client",
 ]
@@ -8552,6 +8553,7 @@ dependencies = [
 name = "sc-block-builder"
 version = "0.10.0-dev"
 dependencies = [
+ "log",
  "parity-scale-codec",
  "sc-client-api",
  "sp-api",
@@ -8561,6 +8563,7 @@ dependencies = [
  "sp-inherents",
  "sp-runtime",
  "sp-state-machine",
+ "sp-trie",
  "substrate-test-runtime-client",
 ]
 

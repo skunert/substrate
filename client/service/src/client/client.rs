@@ -48,14 +48,13 @@ use sc_executor::RuntimeVersion;
 use sc_telemetry::{telemetry, TelemetryHandle, SUBSTRATE_INFO};
 use sp_api::{
 	ApiExt, ApiRef, CallApiAt, CallApiAtParams, ConstructRuntimeApi, Core as CoreApi,
-	ProvideRuntimeApi,
+	ExtensionProducer, ProvideRuntimeApi,
 };
 use sp_blockchain::{
 	self as blockchain, Backend as ChainBackend, CachedHeaderMetadata, Error,
 	HeaderBackend as ChainHeaderBackend, HeaderMetadata, Info as BlockchainInfo,
 };
 use sp_consensus::{BlockOrigin, BlockStatus, Error as ConsensusError};
-use sp_externalities::Extension;
 
 use sc_utils::mpsc::{tracing_unbounded, TracingUnboundedSender};
 use sp_core::{
@@ -81,7 +80,6 @@ use sp_state_machine::{
 };
 use sp_trie::{CompactProof, StorageProof};
 use std::{
-	any::TypeId,
 	collections::{HashMap, HashSet},
 	marker::PhantomData,
 	path::PathBuf,
@@ -1428,7 +1426,7 @@ where
 		parent: Block::Hash,
 		inherent_digests: Digest,
 		record_proof: R,
-		extension: Option<(TypeId, Box<dyn Extension + Sync + Send>)>,
+		extension: Option<ExtensionProducer>,
 	) -> sp_blockchain::Result<sc_block_builder::BlockBuilder<Block, Self, B>> {
 		sc_block_builder::BlockBuilder::new_with_extension(
 			self,

@@ -26,12 +26,10 @@
 
 #![warn(missing_docs)]
 
-use std::any::TypeId;
-
 use codec::Encode;
 
 use sp_api::{
-	ApiExt, ApiRef, Core, Extension, ProvideRuntimeApi, StorageChanges, StorageProof,
+	ApiExt, ApiRef, Core, ExtensionProducer, ProvideRuntimeApi, StorageChanges, StorageProof,
 	TransactionOutcome,
 };
 use sp_blockchain::{ApplyExtrinsicFailed, Error};
@@ -124,7 +122,7 @@ where
 		parent: Block::Hash,
 		inherent_digests: Digest,
 		record_proof: R,
-		extension: Option<(core::any::TypeId, Box<dyn Extension + Sync + Send>)>,
+		extension: Option<ExtensionProducer>,
 	) -> sp_blockchain::Result<BlockBuilder<Block, RA, B>>;
 
 	/// Create a new block, built on the head of the chain.
@@ -167,7 +165,7 @@ where
 		record_proof: RecordProof,
 		inherent_digests: Digest,
 		backend: &'a B,
-		extension: Option<(TypeId, Box<dyn Extension + Sync + Send>)>,
+		extension: Option<sp_api::ExtensionProducer>,
 	) -> Result<Self, Error> {
 		let header = <<Block as BlockT>::Header as HeaderT>::new(
 			parent_number + One::one(),
@@ -181,15 +179,18 @@ where
 
 		let mut api = api.runtime_api();
 
-		if let Some(extension) = extension {
-			log::info!(target:"skunert", "Registering extension in Block-builder");
-			api.register_extension_with_type_id(extension.0, extension.1);
-		} else {
-			log::info!(target:"skunert", "not registering extension in Block-builder");
-		}
-
 		if record_proof.yes() {
 			api.record_proof();
+		}
+
+		if let Some(proof_recorder) = api.proof_recorder() {
+			if let Some(extension) = extension {
+				log::info!(target:"skunert", "Registering extension in Block-builder");
+				let extension = extension(Box::new(proof_recorder));
+				api.register_extension_with_type_id(extension.0, extension.1);
+			} else {
+				log::info!(target:"skunert", "not registering extension in Block-builder");
+			}
 		}
 
 		api.set_call_context(CallContext::Onchain);

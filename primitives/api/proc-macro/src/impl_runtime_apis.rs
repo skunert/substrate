@@ -334,7 +334,7 @@ fn generate_runtime_api_base_structures() -> Result<TokenStream> {
 				}
 
 				fn register_extension_with_type_id(&mut self, type_id: core::any::TypeId, extension: Box<dyn #crate_::Extension>) {
-					std::cell::RefCell::borrow_mut(&self.extensions).register_with_type_id(type_id, extension);
+					let _ = std::cell::RefCell::borrow_mut(&self.extensions).register_with_type_id(type_id, extension);
 				}
 			}
 
