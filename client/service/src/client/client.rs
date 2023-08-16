@@ -116,6 +116,7 @@ where
 	config: ClientConfig<Block>,
 	telemetry: Option<TelemetryHandle>,
 	unpin_worker_sender: TracingUnboundedSender<Block::Hash>,
+	import_extension_factory: Option<ExtensionProducer>,
 	_phantom: PhantomData<RA>,
 }
 
@@ -376,7 +377,7 @@ where
 	Block::Header: Clone,
 {
 	/// Creates new Substrate Client with given blockchain and code executor.
-	pub fn new<G>(
+	pub fn new_with_import_extension<G>(
 		backend: Arc<B>,
 		executor: E,
 		spawn_handle: Box<dyn SpawnNamed>,
@@ -386,6 +387,7 @@ where
 		prometheus_registry: Option<Registry>,
 		telemetry: Option<TelemetryHandle>,
 		config: ClientConfig<Block>,
+		import_extension_factory: Option<ExtensionProducer>,
 	) -> sp_blockchain::Result<Self>
 	where
 		G: BuildGenesisBlock<
@@ -448,8 +450,41 @@ where
 			config,
 			telemetry,
 			unpin_worker_sender,
+			import_extension_factory: Default::default(),
 			_phantom: Default::default(),
 		})
+	}
+	/// Creates new Substrate Client with given blockchain and code executor.
+	pub fn new<G>(
+		backend: Arc<B>,
+		executor: E,
+		spawn_handle: Box<dyn SpawnNamed>,
+		genesis_block_builder: G,
+		fork_blocks: ForkBlocks<Block>,
+		bad_blocks: BadBlocks<Block>,
+		prometheus_registry: Option<Registry>,
+		telemetry: Option<TelemetryHandle>,
+		config: ClientConfig<Block>,
+	) -> sp_blockchain::Result<Self>
+	where
+		G: BuildGenesisBlock<
+			Block,
+			BlockImportOperation = <B as backend::Backend<Block>>::BlockImportOperation,
+		>,
+		B: 'static,
+	{
+		Self::new_with_import_extension(
+			backend,
+			executor,
+			spawn_handle,
+			genesis_block_builder,
+			fork_blocks,
+			bad_blocks,
+			prometheus_registry,
+			telemetry,
+			config,
+			Default::default(),
+		)
 	}
 
 	/// returns a reference to the block import notification sinks
@@ -861,13 +896,29 @@ where
 		let storage_changes = match (enact_state, storage_changes, &import_block.body) {
 			// We have storage changes and should enact the state, so we don't need to do anything
 			// here
-			(true, changes @ Some(_), _) => changes,
+			(true, changes @ Some(_), _) => {
+				log::info!(target: "skunert", "Changes were provided, block is not re-executed.");
+				changes
+			},
 			// We should enact state, but don't have any storage changes, so we need to execute the
 			// block.
 			(true, None, Some(ref body)) => {
 				let mut runtime_api = self.runtime_api();
 
 				runtime_api.set_call_context(CallContext::Onchain);
+
+				/// TODO @skunert Register extension here
+				if let Some(proof_recorder) = runtime_api.proof_recorder() {
+					if let Some(extension) = self.import_extension_factory.clone() {
+						log::info!(target:"skunert", "Block import with extension");
+						let extension = extension(Box::new(proof_recorder));
+						runtime_api.register_extension_with_type_id(extension.0, extension.1);
+					} else {
+						log::info!(target:"skunert", "Block import without extension");
+					}
+				} else {
+					log::info!(target:"skunert", "Block import without proof recorder");
+				}
 
 				runtime_api.execute_block(
 					*parent_hash,

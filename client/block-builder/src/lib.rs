@@ -165,7 +165,7 @@ where
 		record_proof: RecordProof,
 		inherent_digests: Digest,
 		backend: &'a B,
-		extension: Option<sp_api::ExtensionProducer>,
+		extension_producer: Option<sp_api::ExtensionProducer>,
 	) -> Result<Self, Error> {
 		let header = <<Block as BlockT>::Header as HeaderT>::new(
 			parent_number + One::one(),
@@ -184,9 +184,9 @@ where
 		}
 
 		if let Some(proof_recorder) = api.proof_recorder() {
-			if let Some(extension) = extension {
+			if let Some(extension_producer) = extension_producer {
 				log::info!(target:"skunert", "Registering extension in Block-builder");
-				let extension = extension(Box::new(proof_recorder));
+				let extension = extension_producer(Box::new(proof_recorder));
 				api.register_extension_with_type_id(extension.0, extension.1);
 			} else {
 				log::info!(target:"skunert", "not registering extension in Block-builder");

@@ -416,6 +416,7 @@ impl BenchDb {
 			None,
 			None,
 			client_config,
+			None,
 		)
 		.expect("Should not fail");
 
