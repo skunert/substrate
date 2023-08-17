@@ -235,7 +235,8 @@ where
 	Block: BlockT,
 	B: backend::LocalBackend<Block> + 'static,
 {
-	let extensions = ExecutionExtensions::new(None, Arc::new(executor.clone()));
+	// TODO skunert Check if we need to pass something here
+	let extensions = ExecutionExtensions::new(None, Arc::new(executor.clone()), None);
 
 	let call_executor =
 		LocalCallExecutor::new(backend.clone(), executor, config.clone(), extensions)?;
@@ -377,7 +378,7 @@ where
 	Block::Header: Clone,
 {
 	/// Creates new Substrate Client with given blockchain and code executor.
-	pub fn new_with_import_extension<G>(
+	pub fn new<G>(
 		backend: Arc<B>,
 		executor: E,
 		spawn_handle: Box<dyn SpawnNamed>,
@@ -387,7 +388,6 @@ where
 		prometheus_registry: Option<Registry>,
 		telemetry: Option<TelemetryHandle>,
 		config: ClientConfig<Block>,
-		import_extension_factory: Option<ExtensionProducer>,
 	) -> sp_blockchain::Result<Self>
 	where
 		G: BuildGenesisBlock<
@@ -453,38 +453,6 @@ where
 			import_extension_factory: Default::default(),
 			_phantom: Default::default(),
 		})
-	}
-	/// Creates new Substrate Client with given blockchain and code executor.
-	pub fn new<G>(
-		backend: Arc<B>,
-		executor: E,
-		spawn_handle: Box<dyn SpawnNamed>,
-		genesis_block_builder: G,
-		fork_blocks: ForkBlocks<Block>,
-		bad_blocks: BadBlocks<Block>,
-		prometheus_registry: Option<Registry>,
-		telemetry: Option<TelemetryHandle>,
-		config: ClientConfig<Block>,
-	) -> sp_blockchain::Result<Self>
-	where
-		G: BuildGenesisBlock<
-			Block,
-			BlockImportOperation = <B as backend::Backend<Block>>::BlockImportOperation,
-		>,
-		B: 'static,
-	{
-		Self::new_with_import_extension(
-			backend,
-			executor,
-			spawn_handle,
-			genesis_block_builder,
-			fork_blocks,
-			bad_blocks,
-			prometheus_registry,
-			telemetry,
-			config,
-			Default::default(),
-		)
 	}
 
 	/// returns a reference to the block import notification sinks
@@ -909,7 +877,9 @@ where
 
 				/// TODO @skunert Register extension here
 				if let Some(proof_recorder) = runtime_api.proof_recorder() {
-					if let Some(extension) = self.import_extension_factory.clone() {
+					if let Some(extension) =
+						self.executor.execution_extensions().get_import_extension().clone()
+					{
 						log::info!(target:"skunert", "Block import with extension");
 						let extension = extension(Box::new(proof_recorder));
 						runtime_api.register_extension_with_type_id(extension.0, extension.1);

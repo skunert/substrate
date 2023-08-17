@@ -226,6 +226,7 @@ where
 		let extensions = sc_client_api::execution_extensions::ExecutionExtensions::new(
 			None,
 			Arc::new(executor.clone()),
+			import_extension_factory.clone(),
 		);
 
 		let wasm_runtime_substitutes = config
@@ -265,7 +266,6 @@ where
 				),
 				wasm_runtime_substitutes,
 			},
-			import_extension_factory,
 		)?;
 
 		client
@@ -319,7 +319,6 @@ pub fn new_client<E, Block, RA, G>(
 	prometheus_registry: Option<Registry>,
 	telemetry: Option<TelemetryHandle>,
 	config: ClientConfig<Block>,
-	import_extension_factory: Option<ExtensionProducer>,
 ) -> Result<
 	Client<
 		Backend<Block>,
@@ -344,7 +343,7 @@ where
 		execution_extensions,
 	)?;
 
-	Client::new_with_import_extension(
+	Client::new(
 		backend,
 		executor,
 		spawn_handle,
@@ -354,7 +353,6 @@ where
 		prometheus_registry,
 		telemetry,
 		config,
-		import_extension_factory,
 	)
 }
 
