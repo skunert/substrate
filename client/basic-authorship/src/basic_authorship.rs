@@ -209,8 +209,7 @@ where
 		+ Send
 		+ Sync
 		+ 'static,
-	C::Api:
-		ApiExt<Block, StateBackend = backend::StateBackendFor<B, Block>> + BlockBuilderApi<Block>,
+	C::Api: ApiExt<Block> + BlockBuilderApi<Block>,
 {
 	fn init_with_now(
 		&mut self,
@@ -252,8 +251,7 @@ where
 		+ Send
 		+ Sync
 		+ 'static,
-	C::Api:
-		ApiExt<Block, StateBackend = backend::StateBackendFor<B, Block>> + BlockBuilderApi<Block>,
+	C::Api: ApiExt<Block> + BlockBuilderApi<Block>,
 	PR: ProofRecording,
 {
 	type CreateProposer = future::Ready<Result<Self::Proposer, Self::Error>>;
@@ -293,17 +291,11 @@ where
 		+ Send
 		+ Sync
 		+ 'static,
-	C::Api:
-		ApiExt<Block, StateBackend = backend::StateBackendFor<B, Block>> + BlockBuilderApi<Block>,
+	C::Api: ApiExt<Block> + BlockBuilderApi<Block>,
 	PR: ProofRecording,
 {
-	type Transaction = backend::TransactionFor<B, Block>;
-	type Proposal = Pin<
-		Box<
-			dyn Future<Output = Result<Proposal<Block, Self::Transaction, PR::Proof>, Self::Error>>
-				+ Send,
-		>,
-	>;
+	type Proposal =
+		Pin<Box<dyn Future<Output = Result<Proposal<Block, PR::Proof>, Self::Error>> + Send>>;
 	type Error = sp_blockchain::Error;
 	type ProofRecording = PR;
 	type Proof = PR::Proof;
@@ -356,8 +348,7 @@ where
 		+ Send
 		+ Sync
 		+ 'static,
-	C::Api:
-		ApiExt<Block, StateBackend = backend::StateBackendFor<B, Block>> + BlockBuilderApi<Block>,
+	C::Api: ApiExt<Block> + BlockBuilderApi<Block>,
 	PR: ProofRecording,
 {
 	async fn propose_with(
@@ -366,8 +357,7 @@ where
 		inherent_digests: Digest,
 		deadline: time::Instant,
 		block_size_limit: Option<usize>,
-	) -> Result<Proposal<Block, backend::TransactionFor<B, Block>, PR::Proof>, sp_blockchain::Error>
-	{
+	) -> Result<Proposal<Block, PR::Proof>, sp_blockchain::Error> {
 		let propose_with_timer = time::Instant::now();
 
 		let mut block_builder = self.client.new_block_at(
