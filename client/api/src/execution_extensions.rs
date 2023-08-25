@@ -104,14 +104,14 @@ impl<Block: BlockT> ExecutionExtensions<Block> {
 	pub fn new(
 		extensions_factory: Option<Box<dyn ExtensionsFactory<Block>>>,
 		read_runtime_version: Arc<dyn ReadRuntimeVersion>,
-		import_extension_producer: Option<ExtensionProducer>,
+		import_extension: Option<ExtensionProducer>,
 	) -> Self {
 		Self {
 			extensions_factory: extensions_factory
 				.map(RwLock::new)
 				.unwrap_or_else(|| RwLock::new(Box::new(()))),
 			read_runtime_version,
-			import_extension: None,
+			import_extension,
 		}
 	}
 

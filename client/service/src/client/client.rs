@@ -116,7 +116,6 @@ where
 	config: ClientConfig<Block>,
 	telemetry: Option<TelemetryHandle>,
 	unpin_worker_sender: TracingUnboundedSender<Block::Hash>,
-	import_extension_factory: Option<ExtensionProducer>,
 	_phantom: PhantomData<RA>,
 }
 
@@ -450,7 +449,6 @@ where
 			config,
 			telemetry,
 			unpin_worker_sender,
-			import_extension_factory: Default::default(),
 			_phantom: Default::default(),
 		})
 	}
@@ -868,19 +866,19 @@ where
 
 				runtime_api.set_call_context(CallContext::Onchain);
 
-				/// TODO @skunert Register extension here
-				if let Some(proof_recorder) = runtime_api.proof_recorder() {
-					if let Some(extension) =
-						self.executor.execution_extensions().get_import_extension().clone()
-					{
-						log::info!(target:"skunert", "Block import with extension");
+				if let Some(extension) =
+					self.executor.execution_extensions().get_import_extension().clone()
+				{
+					runtime_api.record_proof();
+					if let Some(proof_recorder) = runtime_api.proof_recorder() {
+						log::info!(target:"skunert", "Block import with extension and proof recording.");
 						let extension = extension(Box::new(proof_recorder));
 						runtime_api.register_extension_with_type_id(extension.0, extension.1);
 					} else {
-						log::info!(target:"skunert", "Block import without extension");
+						log::info!(target:"skunert", "Block import without proof recorder");
 					}
 				} else {
-					log::info!(target:"skunert", "Block import without proof recorder");
+					log::info!(target:"skunert", "Block import without extension");
 				}
 
 				runtime_api.execute_block(
