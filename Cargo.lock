@@ -3002,6 +3002,7 @@ dependencies = [
  "sp-std",
  "sp-tracing",
  "sp-weights",
+ "static_assertions",
  "tt-call",
 ]
 
@@ -4242,6 +4243,7 @@ dependencies = [
  "pallet-bags-list",
  "pallet-balances",
  "pallet-bounties",
+ "pallet-broker",
  "pallet-child-bounties",
  "pallet-collective",
  "pallet-contracts",
@@ -4280,6 +4282,7 @@ dependencies = [
  "pallet-referenda",
  "pallet-remark",
  "pallet-root-testing",
+ "pallet-safe-mode",
  "pallet-salary",
  "pallet-scheduler",
  "pallet-session",
@@ -4297,6 +4300,7 @@ dependencies = [
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-transaction-storage",
  "pallet-treasury",
+ "pallet-tx-pause",
  "pallet-uniques",
  "pallet-utility",
  "pallet-vesting",
@@ -6437,6 +6441,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-broker"
+version = "0.1.0"
+dependencies = [
+ "bitvec",
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-child-bounties"
 version = "4.0.0-dev"
 dependencies = [
@@ -7413,6 +7434,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-safe-mode"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-proxy",
+ "pallet-utility",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-salary"
 version = "4.0.0-dev"
 dependencies = [
@@ -7774,6 +7814,24 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-tx-pause"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-proxy",
+ "pallet-utility",
+ "parity-scale-codec",
+ "scale-info",
  "sp-core",
  "sp-io",
  "sp-runtime",
